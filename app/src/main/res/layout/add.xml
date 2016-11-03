@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+
+    <TextView
+        android:text="学生姓名："
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/text"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="47dp"
+        android:id="@+id/text_name" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="textPersonName"
+        android:ems="10"
+        android:layout_below="@+id/text"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="31dp"
+        android:id="@+id/edit_name" />
+
+    <TextView
+        android:text="学生学号："
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/edit_name"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="83dp"
+        android:id="@+id/text_id" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="number"
+        android:ems="10"
+        android:layout_alignBottom="@+id/text_id"
+        android:layout_alignStart="@+id/edit_name"
+        android:id="@+id/edit_id" />
+
+    <TextView
+        android:text="所在班级："
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/text_id"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="93dp"
+        android:id="@+id/text_banji" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="textPersonName"
+        android:ems="10"
+        android:id="@+id/edit_banji"
+        android:layout_alignBottom="@+id/text_banji"
+        android:layout_alignStart="@+id/edit_id" />
+</RelativeLayout>

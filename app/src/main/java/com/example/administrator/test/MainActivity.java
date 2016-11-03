@@ -1,7 +1,10 @@
 package com.example.administrator.test;
 
+import android.app.Dialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,11 +18,16 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
+import android.widget.Spinner;
 import android.widget.TextView;
+
 import java.util.HashMap;
 
 import android.app.AlertDialog;
@@ -39,12 +47,26 @@ public class MainActivity extends Activity {
     SQLiteDatabase db;
     MyAdapter myAdapter;
     ListView lv;
+    Spinner spinner;
+    Button bu_add;
+    AlertDialog alertDialog;
+    //View addView;
+    EditText e_id,e_name,e_banji;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        ImageView image1=(ImageView)findViewById(R.id.imageView);
+        final Context c = this;
+        spinner = (Spinner) findViewById(R.id.spinner);
+        createspinner();
+//        LayoutInflater la=LayoutInflater.from(this);
+//        addView=la.inflate(R.layout.add,null);
+//        e_id=(EditText)addView.findViewById(R.id.edit_id) ;
+//        e_name=(EditText)addView.findViewById(R.id.edit_name) ;
+//        e_banji=(EditText)addView.findViewById(R.id.edit_banji) ;
+
+        ImageView image1 = (ImageView) findViewById(R.id.imageView);
 //        image1.setImageResource(R.drawable.ic_launcher);
         lv = (ListView) findViewById(R.id.listView);
         lv.setOnCreateContextMenuListener(listviewLongPress);
@@ -55,13 +77,197 @@ public class MainActivity extends Activity {
         db = mOpenHelper.getWritableDatabase();
         // 插入数据
         Insert();
-        // 查询数据
-        Query();
-        // 创建MyAdapter实例
-        myAdapter = new MyAdapter(this);
-        // 向listview中添加Adapter
-        lv.setAdapter(myAdapter);
+//        alertDialog= new Dialog(this);
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view,
+                                       int pos, long id) {
+
+                //Query(spinner.getSelectedItem().toString());
+                //Toast.makeText(MainActivity.this, spinner.getSelectedItem().toString(), Toast.LENGTH_SHORT).show();
+                personList.clear();
+                Query(spinner.getSelectedItem().toString());
+                // 创建MyAdapter实例
+                myAdapter = new MyAdapter(c);
+                // 向listview中添加Adapter
+                myAdapter.notifyDataSetChanged();
+                lv.setAdapter(myAdapter);
+                //Toast.makeText(MainActivity.this, "触发结束", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                // Another interface callback
+            }
+        });
+        bu_add = (Button) findViewById(R.id.bu_add);
+        //bu_add.setOnClickListener(li);
+
+        bu_add.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                View addView;
+                LayoutInflater la=LayoutInflater.from(c);
+                addView=la.inflate(R.layout.add,null);
+                e_id=(EditText)addView.findViewById(R.id.edit_id) ;
+                e_name=(EditText)addView.findViewById(R.id.edit_name) ;
+                e_banji=(EditText)addView.findViewById(R.id.edit_banji) ;
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setView(null);
+                builder.
+                        setTitle("添加学生信息").
+                        setIcon(R.drawable.ic_launcher).setView(addView).
+                        setPositiveButton("保存", new DialogInterface.OnClickListener() {
+
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                try{
+                                    db.execSQL("insert into person(_id,name,banji) values (?,?,?)", new Object[]{e_id.getText(), e_name.getText(), e_banji.getText()});
+                                    personList.clear();
+                                    Query(spinner.getSelectedItem().toString());
+                                    // 创建MyAdapter实例
+                                    //myAdapter = new MyAdapter(c);
+                                    // 向listview中添加Adapter
+                                    myAdapter.notifyDataSetChanged();
+                                    try {
+                                        Field field = dialog.getClass().getSuperclass().getDeclaredField("mShowing");
+                                        field.setAccessible(true);
+                                        field.set(dialog, false);
+
+
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+                                    Toast.makeText(getApplicationContext(), "信息保存成功", Toast.LENGTH_SHORT).show();
+                                    e_banji.setText("");
+                                    e_name.setText("");
+                                    e_id.setText("");
+                                    //lv.setAdapter(myAdapter);
+                                }
+                                catch(Exception e){
+                                    Toast.makeText(getApplicationContext(), "信息输入错误", Toast.LENGTH_SHORT).show();
+                                }
+                                //dialog.dismiss();
+                                //alertDialog.dismiss();
+
+                            }
+                        }).setNegativeButton("取消",new DialogInterface.OnClickListener(){
+                    @Override
+                    public void onClick(DialogInterface dialog,int which){
+                        try {
+                            Field field = dialog.getClass().getSuperclass().getDeclaredField("mShowing");
+                            field.setAccessible(true);
+                            field.set(dialog, true);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+                }).setNeutralButton("清空", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        e_banji.setText("");
+                        e_name.setText("");
+                        e_id.setText("");
+                        try {
+                            Field field = dialog.getClass().getSuperclass().getDeclaredField("mShowing");
+                            field.setAccessible(true);
+                            field.set(dialog, false);
+
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+                }).create().show();
+
+            }
+        });
     }
+//    View.OnClickListener li=new View.OnClickListener(){
+
+//        @Override
+//        public void onClick(View v) {
+//            View addView;
+//            LayoutInflater la=LayoutInflater.from(this);
+//            addView=la.inflate(R.layout.add,null);
+//            e_id=(EditText)addView.findViewById(R.id.edit_id) ;
+//            e_name=(EditText)addView.findViewById(R.id.edit_name) ;
+//            e_banji=(EditText)addView.findViewById(R.id.edit_banji) ;
+//            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+//            builder.setView(null);
+//            builder.
+//                    setTitle("添加学生信息").
+//                    setIcon(R.drawable.ic_launcher).setView(addView).
+//                    setPositiveButton("保存", new DialogInterface.OnClickListener() {
+//
+//                        @Override
+//                        public void onClick(DialogInterface dialog, int which) {
+//                            try{
+//                                db.execSQL("insert into person(_id,name,banji) values (?,?,?)", new Object[]{e_id.getText(), e_name.getText(), e_banji.getText()});
+//                                personList.clear();
+//                                Query(spinner.getSelectedItem().toString());
+//                                // 创建MyAdapter实例
+//                                //myAdapter = new MyAdapter(c);
+//                                // 向listview中添加Adapter
+//                                myAdapter.notifyDataSetChanged();
+//                                try {
+//                                    Field field = dialog.getClass().getSuperclass().getDeclaredField("mShowing");
+//                                    field.setAccessible(true);
+//                                    field.set(dialog, false);
+//
+//
+//                                } catch (Exception e) {
+//                                    e.printStackTrace();
+//                                }
+//                                Toast.makeText(getApplicationContext(), "信息保存成功", Toast.LENGTH_SHORT).show();
+//                                e_banji.setText("");
+//                                e_name.setText("");
+//                                e_id.setText("");
+//                                //lv.setAdapter(myAdapter);
+//                            }
+//                            catch(Exception e){
+//                                Toast.makeText(getApplicationContext(), "信息输入错误", Toast.LENGTH_SHORT).show();
+//                            }
+//                            //dialog.dismiss();
+//                            //alertDialog.dismiss();
+//
+//                        }
+//                    }).setNegativeButton("取消",new DialogInterface.OnClickListener(){
+//                @Override
+//                public void onClick(DialogInterface dialog,int which){
+//                    try {
+//                        Field field = dialog.getClass().getSuperclass().getDeclaredField("mShowing");
+//                        field.setAccessible(true);
+//                        field.set(dialog, true);
+//                    } catch (Exception e) {
+//                        e.printStackTrace();
+//                    }
+//
+//                }
+//            }).setNeutralButton("清空", new DialogInterface.OnClickListener() {
+//                @Override
+//                public void onClick(DialogInterface dialog, int which) {
+//                    e_banji.setText("");
+//                    e_name.setText("");
+//                    e_id.setText("");
+//                    try {
+//                        Field field = dialog.getClass().getSuperclass().getDeclaredField("mShowing");
+//                        field.setAccessible(true);
+//                        field.set(dialog, false);
+//
+//
+//                    } catch (Exception e) {
+//                        e.printStackTrace();
+//                    }
+//
+//                }
+//            }).create().show();
+//
+//        }
+//    };
+
     OnCreateContextMenuListener listviewLongPress = new OnCreateContextMenuListener() {
         @Override
         public void onCreateContextMenu(ContextMenu menu, View v,
@@ -81,33 +287,23 @@ public class MainActivity extends Activity {
                                         DialogInterface dialoginterface, int i) {
                                     // 获取位置索引
                                     //try{
-                                        Toast.makeText(getApplicationContext(),"进入",Toast.LENGTH_SHORT).show();
+                                    //Toast.makeText(getApplicationContext(), "进入", Toast.LENGTH_SHORT).show();
                                     int mListPos = info.position;
-                                        Toast.makeText(getApplicationContext(),"1",Toast.LENGTH_SHORT).show();
                                     // 获取对应HashMap数据内容
 //                                    List<Person> map = personList
 //                                            .get(mListPos);
-                                    Person map=personList.get(mListPos);
-                                        Toast.makeText(getApplicationContext(),"2",Toast.LENGTH_SHORT).show();
+                                    Person map = personList.get(mListPos);
                                     // 获取id
                                     //int id = Integer.valueOf((map.get_id().toString()));
-                                        //String str=map.get_id();
-                                        int id = Integer.valueOf((map.get_id().toString()));
-                                        Toast.makeText(getApplicationContext(),"3",Toast.LENGTH_SHORT).show();
+                                    //String str=map.get_id();
+                                    //int id = Integer.valueOf((map.get_id().toString()));
                                     // 获取数组具体值后,可以对数据进行相关的操作,例如更新数据
-                                    if (Delete(id)) {
+                                    if (Delete(map.get_id())) {
                                         // 移除listData的数据
                                         personList.remove(mListPos);
 
-                                        Toast.makeText(getApplicationContext(),"4",Toast.LENGTH_SHORT).show();
                                         myAdapter.notifyDataSetChanged();
-                                        Toast.makeText(getApplicationContext(),"5",Toast.LENGTH_SHORT).show();
                                     }
-                                //}
-//                                    catch (Exception e) {
-//                                        Toast.makeText(getApplicationContext(), "删除数据库失败",
-//                                                Toast.LENGTH_LONG).show();
-//                                    }
                                 }
                             })
                     .setNegativeButton("否",
@@ -151,7 +347,6 @@ public class MainActivity extends Activity {
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            // 从personList取出Person
             Person p = personList.get(position);
             ViewHolder viewHolder = null;
             if (convertView == null) {
@@ -192,11 +387,20 @@ public class MainActivity extends Activity {
 
     // 插入数据
     public void Insert() {
-        for (int i = 0; i < 10; i++) {
+        for (int i = 1; i < 10; i++) {
             ContentValues values = new ContentValues();
-            values.put("_id","0128"+i);
+            values.put("_id", "63140601010" + i);
             values.put("name", "任中豪" + i);
-            values.put("banji", "计科一班" + i);
+            values.put("banji", "计科一班");
+            values.put("salary", "123" + i + i);
+            values.put("phone", "151" + i + i);
+            db.insert("person", null, values);
+        }
+        for (int i = 1; i < 10; i++) {
+            ContentValues values = new ContentValues();
+            values.put("_id", "63140601020" + i);
+            values.put("name", "无名氏" + i);
+            values.put("banji", "计科二班");
             values.put("salary", "123" + i + i);
             values.put("phone", "151" + i + i);
             db.insert("person", null, values);
@@ -207,30 +411,57 @@ public class MainActivity extends Activity {
     public void Query() {
         Cursor cursor = db.query("person", null, null, null, null, null, null);
         while (cursor.moveToNext()) {
-//            String _id = cursor.getString(0);
             String _id = cursor.getString(0);
             String name = cursor.getString(1);
-            String banji=cursor.getString(2);
+            String banji = cursor.getString(2);
             String salary = cursor.getString(3);
             String phone = cursor.getString(4);
-            Person person = new Person(_id, name,banji, phone, salary);
+            Person person = new Person(_id, name, banji, phone, salary);
             personList.add(person);
         }
     }
 
-    public boolean Delete(int id){
-        Toast.makeText(getApplicationContext(),"进入数据库",Toast.LENGTH_SHORT).show();
+    public void Query(String str) {
+        String[] selectionArgs = new String[]{str};
+        Cursor cursor = db.query("person", null, "banji=?", selectionArgs, null, null, null);
+        while (cursor.moveToNext()) {
+            String _id = cursor.getString(0);
+            String name = cursor.getString(1);
+            String banji = cursor.getString(2);
+            String salary = cursor.getString(3);
+            String phone = cursor.getString(4);
+            Person person = new Person(_id, name, banji, phone, salary);
+            personList.add(person);
+        }
+    }
+
+    public boolean Delete(String id) {
+        //Toast.makeText(getApplicationContext(),"进入数据库",Toast.LENGTH_SHORT).show();
         String whereClause = "_id=?";
-        String[] whereArgs = new String[] { String.valueOf(id) };
+        String[] whereArgs = new String[]{String.valueOf(id)};
         //db.delete("person",whereClause,whereArgs);
         try {
-            db.delete("person",whereClause,whereArgs);
+            db.delete("person", whereClause, whereArgs);
         } catch (Exception e) {
             Toast.makeText(getApplicationContext(), "删除数据库失败",
                     Toast.LENGTH_LONG).show();
             return false;
         }
         return true;
+    }
+
+    private void createspinner() {
+        //Spinner spinner = (Spinner) findViewById(R.id.spinner);
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+                android.R.layout.simple_spinner_item); //系统sdk里面的R文件
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        adapter.add("计科一班");
+        adapter.add("计科二班");
+        adapter.add("计科三班");
+        adapter.add("计科四班");
+
+        spinner.setAdapter(adapter);
     }
 
 

@@ -21,7 +21,9 @@ public class MyOpenHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         // TODO Auto-generated method stub
         //创建表
-        db.execSQL("create table person(_id integer primary key autoincrement, name char(10), banji char(10),salary char(20), phone integer(20) )");
+        //db.execSQL("create table person(_id integer primary key autoincrement, name char(10), banji char(10),salary char(20), phone integer(20) )");
+        String sql="CREATE TABLE [person]("+"[_id] CHAR(12) PRIMARY KEY,"+"[name] VARCHAR(40),"+"[banji] VARCHAR(40),"+"[salary] VARCHAR(20),"+"[phone] VARCHAR(20))";
+        db.execSQL(sql);
         //db.execSQL("create table person(no integer primary key autoincrement,_id varchar(20), name char(10), banji char(10),salary char(20), phone integer(20) )");
 
     }
